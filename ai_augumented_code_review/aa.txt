@@ -1,0 +1,19 @@
+.angular
+.editorconfig
+.git
+.github
+.gitignore
+.vscode
+aa.txt
+AI-Augmented Code Review.pdf
+ai_review.py
+angular.json
+node_modules
+package-lock.json
+package.json
+public
+README.md
+src
+tsconfig.app.json
+tsconfig.json
+tsconfig.spec.json

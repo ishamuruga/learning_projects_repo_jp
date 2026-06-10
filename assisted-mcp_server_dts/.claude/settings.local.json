@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "PowerShell(Set-Location \"c:\\\\Users\\\\rsubramanian\\\\temp_del\\\\nec-github-copilot\\\\project07-mcp_server_dts\"; $job = Start-Job { $env:PORT=3099; Set-Location \"c:\\\\Users\\\\rsubramanian\\\\temp_del\\\\nec-github-copilot\\\\project07-mcp_server_dts\"; node src/index.js 2>&1 }; Start-Sleep -Seconds 3; $out = Receive-Job $job; try { $h = Invoke-WebRequest -Uri \"http://localhost:3099/health\" -UseBasicParsing -TimeoutSec 3; $h.Content } catch {}; Stop-Job $job; Remove-Job $job; $out)"
+    ]
+  }
+}

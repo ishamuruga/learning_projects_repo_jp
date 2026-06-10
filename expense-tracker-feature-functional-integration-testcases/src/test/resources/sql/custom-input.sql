@@ -1,0 +1,7 @@
+-- Optional custom input SQL for integration runs.
+-- Use this file to provide INSERT/UPDATE commands before test execution.
+-- Example:
+-- UPDATE expenses SET amount = 99.99 WHERE id = 1001;
+-- INSERT INTO expense_types (id, name) VALUES (104, 'Healthcare');
+-- INSERT INTO expenses (id, title, description, amount, expense_type_id, expense_date, created_at, updated_at)
+-- VALUES (1004, 'Doctor Visit', 'Custom inserted row', 50.00, 104, DATE '2026-06-04', TIMESTAMP '2026-06-04 08:00:00', TIMESTAMP '2026-06-04 08:00:00');

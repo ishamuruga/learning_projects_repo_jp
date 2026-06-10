@@ -1,0 +1,88 @@
+<div class="app-container">
+  <header class="page-header">
+    <h1>Todo App</h1>
+    <button class="logout-btn" (click)="logout()">Logout</button>
+  </header>
+
+  <div class="input-section">
+    <input
+      class="todo-input"
+      type="text"
+      placeholder="What needs to be done?"
+      [(ngModel)]="newTodoText"
+      (keyup.enter)="addTodo()"
+    />
+    <select class="priority-select" [(ngModel)]="newTodoPriority">
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+    <input
+      class="date-input"
+      type="date"
+      [(ngModel)]="newTodoPlannedEndDate"
+      aria-label="Planned end date"
+    />
+    <button class="add-btn" (click)="addTodo()">Add</button>
+  </div>
+
+  <div class="filters">
+    @for (f of ['all', 'active', 'completed']; track f) {
+      <button
+        [class.active]="todoService.filter() === f"
+        (click)="setFilter(f)"
+      >{{ f | titlecase }}</button>
+    }
+  </div>
+
+  <ul class="todo-list">
+    @for (todo of todoService.filteredTodos(); track todo.id) {
+      <li class="todo-item" [class.completed]="todo.completed" [class]="'priority-' + todo.priority">
+        @if (editingId() === todo.id) {
+          <input
+            class="edit-input"
+            type="text"
+            [ngModel]="editText()"
+            (ngModelChange)="editText.set($event)"
+            (keyup.enter)="saveEdit(todo.id)"
+            (keyup.escape)="cancelEdit()"
+            (blur)="saveEdit(todo.id)"
+          />
+        } @else {
+          <input
+            type="checkbox"
+            [checked]="todo.completed"
+            (change)="todoService.toggle(todo.id)"
+          />
+          <span class="priority-badge" [class]="'priority-' + todo.priority">{{ todo.priority }}</span>
+          <div class="todo-details">
+            <span class="todo-text" (dblclick)="startEdit(todo.id, todo.text)">{{ todo.text }}</span>
+            @if (todo.plannedEndDate) {
+              <span class="planned-end-date">Planned end: {{ formatPlannedEndDate(todo.plannedEndDate) }}</span>
+            }
+          </div>
+          <button class="delete-btn" (click)="todoService.remove(todo.id)">X</button>
+        }
+      </li>
+    }
+  </ul>
+
+  @if (todoService.filteredTodos().length === 0) {
+    <p class="empty-state">
+      @if (todoService.filter() === 'completed') { No completed tasks. }
+      @else if (todoService.filter() === 'active') { No active tasks! }
+      @else { Add your first task above. }
+    </p>
+  }
+
+  @if (todoService.todos().length > 0) {
+    <footer class="footer">
+      <span>{{ todoService.activeCount() }} item{{ todoService.activeCount() !== 1 ? 's' : '' }} left</span>
+      @if (todoService.completedCount() > 0) {
+        <button class="clear-btn" (click)="todoService.clearCompleted()">
+          Clear completed ({{ todoService.completedCount() }})
+        </button>
+      }
+    </footer>
+  }
+</div>

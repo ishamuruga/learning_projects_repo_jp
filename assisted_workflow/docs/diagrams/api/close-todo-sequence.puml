@@ -1,0 +1,37 @@
+@startuml
+
+title Close Todo - PATCH /api/todos/{id}/close
+
+actor Client
+participant TodoController
+participant TodoService
+participant TodoRepository
+database Database
+
+Client -> TodoController: PATCH /api/todos/{id}/close\nCloseOrCancelRequest
+alt Validation fails (@Valid remarks)
+  TodoController --> Client: 400 Bad Request\nApiResponse.error
+else Valid request
+  TodoController -> TodoService: close(id, request)
+  TodoService -> TodoRepository: findById(id)
+  TodoRepository -> Database: SELECT ... WHERE id = ?
+  Database --> TodoRepository: row or none
+  TodoRepository --> TodoService: Optional<Todo>
+
+  alt Todo missing
+    TodoService --> TodoController: throws IllegalArgumentException
+    TodoController --> Client: 404 Not Found\nApiResponse.error
+  else Todo status != OPEN
+    TodoService --> TodoController: throws IllegalStateException
+    TodoController --> Client: 409 Conflict\nApiResponse.error
+  else OPEN todo
+    TodoService -> TodoRepository: save(todo{status=CLOSED,remarks})
+    TodoRepository -> Database: UPDATE todos
+    Database --> TodoRepository: updated row
+    TodoRepository --> TodoService: Todo
+    TodoService --> TodoController: Todo
+    TodoController --> Client: 200 OK\nApiResponse.ok(Todo)
+  end
+end
+
+@enduml

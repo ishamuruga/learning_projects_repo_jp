@@ -1,0 +1,24 @@
+@startuml
+
+title Create Todo - POST /api/todos
+
+actor Client
+participant TodoController
+participant TodoService
+participant TodoRepository
+database Database
+
+Client -> TodoController: POST /api/todos\nCreateTodoRequest
+alt Validation fails (@Valid)
+  TodoController --> Client: 400 Bad Request\nApiResponse.error
+else Valid request
+  TodoController -> TodoService: create(request)
+  TodoService -> TodoRepository: save(todo)
+  TodoRepository -> Database: INSERT todos
+  Database --> TodoRepository: persisted row
+  TodoRepository --> TodoService: Todo
+  TodoService --> TodoController: Todo
+  TodoController --> Client: 201 Created\nApiResponse.ok(Todo)
+end
+
+@enduml

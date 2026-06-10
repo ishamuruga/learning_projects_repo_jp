@@ -1,0 +1,40 @@
+@startuml
+
+title List Todos - GET /api/todos
+
+actor Client
+participant TodoController
+participant TodoService
+participant TodoRepository
+database Database
+
+Client -> TodoController: GET /api/todos?status=&priority=
+alt Invalid query param enum value
+  TodoController --> Client: 400 Bad Request\nApiResponse.error
+else status provided
+  TodoController -> TodoService: findByStatus(status)
+  TodoService -> TodoRepository: findByStatus(status)
+  TodoRepository -> Database: SELECT ... WHERE status = ?
+  Database --> TodoRepository: rows
+  TodoRepository --> TodoService: List<Todo>
+  TodoService --> TodoController: List<Todo>
+  TodoController --> Client: 200 OK\nApiResponse.ok(List<Todo>)
+else priority provided
+  TodoController -> TodoService: findByPriority(priority)
+  TodoService -> TodoRepository: findByPriority(priority)
+  TodoRepository -> Database: SELECT ... WHERE priority = ?
+  Database --> TodoRepository: rows
+  TodoRepository --> TodoService: List<Todo>
+  TodoService --> TodoController: List<Todo>
+  TodoController --> Client: 200 OK\nApiResponse.ok(List<Todo>)
+else no filters
+  TodoController -> TodoService: findAll()
+  TodoService -> TodoRepository: findAllByOrderByPriorityDescCreatedAtDesc()
+  TodoRepository -> Database: SELECT ... ORDER BY priority DESC, created_at DESC
+  Database --> TodoRepository: rows
+  TodoRepository --> TodoService: List<Todo>
+  TodoService --> TodoController: List<Todo>
+  TodoController --> Client: 200 OK\nApiResponse.ok(List<Todo>)
+end
+
+@enduml

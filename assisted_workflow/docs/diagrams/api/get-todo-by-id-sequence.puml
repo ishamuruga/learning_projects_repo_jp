@@ -1,0 +1,25 @@
+@startuml
+
+title Get Todo By Id - GET /api/todos/{id}
+
+actor Client
+participant TodoController
+participant TodoService
+participant TodoRepository
+database Database
+
+Client -> TodoController: GET /api/todos/{id}
+TodoController -> TodoService: findById(id)
+TodoService -> TodoRepository: findById(id)
+TodoRepository -> Database: SELECT ... WHERE id = ?
+Database --> TodoRepository: row or none
+TodoRepository --> TodoService: Optional<Todo>
+TodoService --> TodoController: Optional<Todo>
+
+alt Todo found
+  TodoController --> Client: 200 OK\nApiResponse.ok(Todo)
+else Todo missing
+  TodoController --> Client: 404 Not Found\nApiResponse.error
+end
+
+@enduml

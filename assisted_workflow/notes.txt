@@ -1,0 +1,19 @@
+
+git add .
+git commit -m "Add CI workflow"
+git push origin main
+
+
+
+Create a GitHub Actions workflow for a Spring Boot Maven project.
+
+Requirements:
+
+Java 21
+Build on pull requests
+Run unit tests
+Package jar
+Cache Maven dependencies
+
+
+python ..\project05-mcp_server\server.py

@@ -1,0 +1,49 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install openai requests
+
+      - name: Get PR diff
+        run: |
+          git fetch --all
+
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          echo "Base: $BASE"
+          echo "Head: $HEAD"
+
+          git diff $BASE $HEAD > diff.txt || git diff HEAD~1 > diff.txt
+
+      - name: Debug diff (optional)
+        run: cat diff.txt
+
+      - name: Run AI Review
+        run: python ai_review.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}

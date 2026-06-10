@@ -1,0 +1,20 @@
+[
+  {
+    "id": "791de457-adcd-44d9-adc4-e5cea142c4c1",
+    "name": "Compilation failure: missing semicolon in ExpenseService.java blocks all functional tests",
+    "description": "The main application fails to compile due to a missing semicolon on the field declaration at ExpenseService.java line 25. This prevents both ExpenseControllerFunctionalTest and ExpenseControllerActualDataFunctionalTest from executing.\n\nError: ';' expected at /src/main/java/com/example/expensetracker/service/ExpenseService.java:[25,54]\n\nAffected line:\n  private final ExpenseRepository expenseRepository  // <-- missing semicolon\n\nImpact: 100% of functional tests cannot run. Zero test cases executed.",
+    "reportedBy": "functional-test-runner-bug-reporter",
+    "environment": "local-dev",
+    "priority": "critical",
+    "status": "open",
+    "logs": "[ERROR] COMPILATION ERROR:\n[ERROR] /C:/Users/rsubramanian/.../expense-tracker/src/main/java/com/example/expensetracker/service/ExpenseService.java:[25,54] ';' expected\n[INFO] 1 error\n[INFO] BUILD FAILURE\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project expense-tracker: Compilation failure",
+    "tags": [
+      "compilation-error",
+      "ExpenseService",
+      "blocker",
+      "functional-tests"
+    ],
+    "timestamp": "2026-06-09T14:30:38.019Z",
+    "updatedAt": "2026-06-09T14:30:38.019Z"
+  }
+]
