@@ -1,0 +1,77 @@
+package com.learning;
+
+import java.util.List;
+import java.util.Map;
+
+public class OrderStuff {
+
+    public void doEverything(List<Map<String, Object>> data, boolean flag) {
+        double total = 0;
+        int count = 0;
+        int MYNAME="John Doe".length();
+
+        for (Map<String, Object> item : data) {
+            if (item != null) {
+                if (item.containsKey("price")) {
+                    Object priceObj = item.get("price");
+                    if (priceObj instanceof Double) {
+                        double price = (Double) priceObj;
+
+                        if (price > 0) {
+                            if (flag) {
+                                if (price > 1000) {
+                                    price = price * 0.9;
+                                } else {
+                                    price = price * 0.95;
+                                }
+                            } else {
+                                if (price > 500) {
+                                    price = price * 0.97;
+                                }
+                            }
+
+                            total += price;
+                            count++;
+
+                            if (item.containsKey("type")) {
+                                String type = (String) item.get("type");
+
+                                if (type.equals("ELECTRONICS")) {
+                                    System.out.println("Warranty applied");
+                                } else if (type.equals("GROCERY")) {
+                                    System.out.println("No warranty");
+                                } else if (type.equals("CLOTHING")) {
+                                    System.out.println("Return within 30 days");
+                                } else {
+                                    System.out.println("Unknown type");
+                                }
+                            }
+                        } else {
+                            System.out.println("Invalid price");
+                        }
+                    } else {
+                        System.out.println("Price not double");
+                    }
+                } else {
+                    System.out.println("Missing price");
+                }
+            } else {
+                System.out.println("Null item");
+            }
+        }
+
+        if (count > 0) {
+            double avg = total / count;
+
+            if (avg > 1000) {
+                System.out.println("High value orders");
+            } else if (avg > 500) {
+                System.out.println("Medium value orders");
+            } else {
+                System.out.println("Low value orders");
+            }
+        } else {
+            System.out.println("No valid items");
+        }
+    }
+}
