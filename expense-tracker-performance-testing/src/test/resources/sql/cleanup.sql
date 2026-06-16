@@ -1,0 +1,4 @@
+DELETE FROM expenses;
+DELETE FROM expense_types;
+ALTER TABLE expenses ALTER COLUMN id RESTART WITH 1;
+ALTER TABLE expense_types ALTER COLUMN id RESTART WITH 1;

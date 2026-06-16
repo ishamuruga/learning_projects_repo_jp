@@ -1,0 +1,220 @@
+<!-- Test Coverage Generation Agent Configuration -->
+<coverage-config>
+  <project>
+    <name>Expense Tracker REST API</name>
+    <language>Java</language>
+    <javaVersion>17</javaVersion>
+    <springBootVersion>3.2.5</springBootVersion>
+    <testFramework>JUnit 5 (Mockito)</testFramework>
+    <database>H2 (in-memory for tests)</database>
+  </project>
+
+  <coverage-targets>
+    <overall>85</overall>
+    <controller>95</controller>
+    <service>90</service>
+    <repository>85</repository>
+    <entity>90</entity>
+  </coverage-targets>
+
+  <layers>
+    <layer name="Controller" package="com.example.expensetracker.controller" classes="1">
+      <target>95</target>
+      <gaps>
+        <gap>Edge cases with partial query parameters</gap>
+        <gap>Concurrent request handling</gap>
+        <gap>Malformed request bodies</gap>
+      </gaps>
+    </layer>
+
+    <layer name="Service" package="com.example.expensetracker.service" classes="1">
+      <target>90</target>
+      <gaps>
+        <gap>Query result edge cases (empty results, null values)</gap>
+        <gap>findOrCreateExpenseType() with case variations</gap>
+        <gap>Date range filtering boundary conditions</gap>
+        <gap>Exception handling paths (ResourceNotFoundException)</gap>
+      </gaps>
+    </layer>
+
+    <layer name="Repository" package="com.example.expensetracker.repository" classes="2">
+      <target>85</target>
+      <gaps>
+        <gap>Custom JPQL query correctness (case-insensitive, date ranges)</gap>
+        <gap>sumAllAmounts() with empty table (null handling)</gap>
+        <gap>findAllCategories() distinct and order verification</gap>
+      </gaps>
+    </layer>
+
+    <layer name="Entity" package="com.example.expensetracker.entity" classes="2">
+      <target>90</target>
+      <gaps>
+        <gap>@PrePersist hook (createdAt and updatedAt initialization)</gap>
+        <gap>@PreUpdate hook (only updatedAt refreshed)</gap>
+        <gap>Validation annotations (@NotBlank, @DecimalMin)</gap>
+      </gaps>
+    </layer>
+
+    <layer name="Exception" package="com.example.expensetracker.exception" classes="2">
+      <target>85</target>
+      <gaps>
+        <gap>GlobalExceptionHandler for validation errors (MethodArgumentNotValidException)</gap>
+        <gap>GlobalExceptionHandler for not found errors (ResourceNotFoundException)</gap>
+        <gap>GlobalExceptionHandler for generic exceptions</gap>
+      </gaps>
+    </layer>
+
+    <layer name="DTO" package="com.example.expensetracker.dto" classes="3">
+      <target>80</target>
+      <gaps>
+        <gap>Validation annotations on ExpenseRequest fields</gap>
+        <gap>JSON serialization/deserialization round-trip</gap>
+      </gaps>
+    </layer>
+  </layers>
+
+  <test-templates>
+    <integration-test>
+      <description>Full-stack test using @SpringBootTest with H2 in-memory database</description>
+      <annotation>@SpringBootTest + @AutoConfigureMockMvc</annotation>
+      <setup>
+        <step>Use @Sql to load seed data before each test</step>
+        <step>Use MockMvc to invoke HTTP endpoints</step>
+        <step>Assert both HTTP status and response body</step>
+      </setup>
+      <use-cases>
+        <case>Controller layer: All HTTP scenarios</case>
+        <case>Service layer: With real repository (no mocks)</case>
+        <case>Repository layer: Custom JPQL queries</case>
+        <case>End-to-end workflows: Create → Read → Update → Delete</case>
+      </use-cases>
+    </integration-test>
+
+    <unit-test>
+      <description>Isolated component test using @ExtendWith(MockitoExtension.class)</description>
+      <annotation>@ExtendWith(MockitoExtension.class) + @Mock + @InjectMocks</annotation>
+      <setup>
+        <step>Mock dependencies using @Mock</step>
+        <step>Inject component under test using @InjectMocks</step>
+        <step>Configure mock behavior with when().thenReturn()</step>
+        <step>Call component method and assert result</step>
+        <step>Verify mock interactions with verify()</step>
+      </setup>
+      <use-cases>
+        <case>Service layer: Business logic branches with controlled repo behavior</case>
+        <case>Exception handling: Test error paths without real DB</case>
+        <case>Edge cases: Test null handling, empty collections</case>
+        <case>Fast execution: No Spring context startup</case>
+      </use-cases>
+    </unit-test>
+  </test-templates>
+
+  <sql-scripts>
+    <cleanup>
+      <file>cleanup.sql</file>
+      <purpose>Reset sequences and clear data before each test</purpose>
+      <content>
+        DELETE FROM expenses;
+        DELETE FROM expense_types;
+        ALTER TABLE expenses ALTER COLUMN id RESTART WITH 1;
+        ALTER TABLE expense_types ALTER COLUMN id RESTART WITH 1;
+      </content>
+    </cleanup>
+
+    <seed-patterns>
+      <pattern name="base-data">
+        <description>Standard 4 expenses across 3 types</description>
+        <file>base-data.sql</file>
+        <restart-id>100</restart-id>
+      </pattern>
+
+      <pattern name="edge-cases">
+        <description>Boundary values: min amount, same date, special chars</description>
+        <file>edge-case-data.sql</file>
+        <expectations>
+          <item>Minimum amount (0.01)</item>
+          <item>Maximum amount (99999999.99)</item>
+          <item>Special characters in title (apostrophes, quotes)</item>
+          <item>Null description values</item>
+        </expectations>
+      </pattern>
+
+      <pattern name="boundary-conditions">
+        <description>Date boundaries, type variations, filtering edge cases</description>
+        <file>boundary-condition-data.sql</file>
+        <expectations>
+          <item>Expenses on range start date</item>
+          <item>Expenses on range end date</item>
+          <item>Single-day ranges</item>
+          <item>Type name case variations (Food, food, FOOD)</item>
+        </expectations>
+      </pattern>
+
+      <pattern name="exception-scenarios">
+        <description>Empty dataset, missing relationships, constraint violations</description>
+        <file>exception-scenario-data.sql</file>
+        <expectations>
+          <item>Empty expenses table (sum returns null)</item>
+          <item>No categories (findAllCategories returns empty)</item>
+          <item>Filtered result sets (no matches returns empty array)</item>
+        </expectations>
+      </pattern>
+    </seed-patterns>
+  </sql-scripts>
+
+  <test-naming-convention>
+    <pattern>{methodName}_{givenCondition}_{expectedResult}</pattern>
+    <examples>
+      <example>createExpense_withExistingType_returns201</example>
+      <example>getExpensesByType_caseInsensitiveFilter_returnsMatches</example>
+      <example>findOrCreateExpenseType_newType_createsAndReturns</example>
+      <example>sumAllAmounts_whenNoExpenses_returnsNull</example>
+      <example>prePersist_onSave_setsCreatedAndUpdatedAt</example>
+    </examples>
+  </test-naming-convention>
+
+  <coverage-metrics>
+    <metric name="line-coverage" unit="%" target="85" />
+    <metric name="branch-coverage" unit="%" target="80" />
+    <metric name="method-coverage" unit="%" target="90" />
+    <metric name="exception-coverage" unit="%" target="100" />
+  </coverage-metrics>
+
+  <validation-requirements>
+    <requirement>All new tests must pass (green status)</requirement>
+    <requirement>No regression in existing tests</requirement>
+    <requirement>Coverage improvement ≥ 10% per gap area</requirement>
+    <requirement>Test names follow BDD conventions</requirement>
+    <requirement>SQL scripts are idempotent (safe to run multiple times)</requirement>
+    <requirement>Generate HTML coverage report with per-class breakdowns</requirement>
+  </validation-requirements>
+
+  <file-structure>
+    <source-root>src/main/java/com/example/expensetracker/</source-root>
+    <test-root>src/test/java/com/example/expensetracker/</test-root>
+    <test-resources>src/test/resources/</test-resources>
+    <coverage-report>target/site/jacoco/</coverage-report>
+
+    <directories>
+      <directory path="controller/" classes="ExpenseController" />
+      <directory path="service/" classes="ExpenseService" />
+      <directory path="repository/" classes="ExpenseRepository, ExpenseTypeRepository" />
+      <directory path="entity/" classes="Expense, ExpenseType" />
+      <directory path="dto/" classes="ExpenseRequest, ExpenseResponse, ExpenseSummary" />
+      <directory path="exception/" classes="GlobalExceptionHandler, ResourceNotFoundException" />
+    </directories>
+  </file-structure>
+
+  <maven-commands>
+    <compile>mvn clean compile</compile>
+    <test>mvn clean test</test>
+    <coverage>mvn clean test jacoco:report</coverage>
+    <view-coverage>open target/site/jacoco/index.html</view-coverage>
+  </maven-commands>
+
+  <environment>
+    <active-profile>test</active-profile>
+    <database-url>jdbc:h2:mem:testdb</database-url>
+    <ddl-auto>create-drop</ddl-auto>
+  </environment>
+</coverage-config>
