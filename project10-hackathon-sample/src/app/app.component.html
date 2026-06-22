@@ -1,0 +1,189 @@
+<main class="app-shell">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Daily Task Management and Productivity Platform</p>
+      <h1>{{ title }}</h1>
+      <p class="subtitle">Plan, assign, and deliver team work with smart reminders and role-aware visibility.</p>
+    </div>
+    <label class="signin-box">
+      <span>Sign in as</span>
+      <select [(ngModel)]="currentUserId" name="currentUserId" aria-label="Select signed in user">
+        @for (user of users; track user.id) {
+          <option [value]="user.id">{{ user.name }} ({{ user.role }})</option>
+        }
+      </select>
+    </label>
+  </header>
+
+  <section class="dashboard-grid">
+    <article class="metric-card">
+      <h2>Visible Tasks</h2>
+      <p>{{ visibleTasks.length }}</p>
+    </article>
+    <article class="metric-card">
+      <h2>In Progress</h2>
+      <p>{{ inProgressCount }}</p>
+    </article>
+    <article class="metric-card">
+      <h2>Completed</h2>
+      <p>{{ completedCount }}</p>
+    </article>
+    <article class="metric-card alert">
+      <h2>Overdue</h2>
+      <p>{{ overdueCount }}</p>
+    </article>
+  </section>
+
+  <section class="content-grid">
+    <article class="panel form-panel">
+      <h2>Create Task</h2>
+      <div class="form-grid">
+        <label>
+          Title
+          <input [(ngModel)]="taskForm.title" name="title" maxlength="100" placeholder="Prepare weekly roadmap" />
+        </label>
+        <label>
+          Due Date
+          <input type="date" [(ngModel)]="taskForm.dueDate" name="dueDate" />
+        </label>
+        <label class="full-width">
+          Description
+          <textarea [(ngModel)]="taskForm.description" name="description" rows="3" placeholder="Describe the outcome and delivery scope."></textarea>
+        </label>
+        <label>
+          Priority
+          <select [(ngModel)]="taskForm.priority" name="priority">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </label>
+        <label>
+          Status
+          <select [(ngModel)]="taskForm.status" name="status">
+            <option value="To Do">To Do</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+        </label>
+        <label class="full-width">
+          Assign To
+          <select [(ngModel)]="taskForm.assigneeId" name="assigneeId">
+            @for (user of users; track user.id) {
+              <option [value]="user.id">{{ user.name }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <button class="primary-btn" (click)="createTask()">Add Task</button>
+    </article>
+
+    <article class="panel reminder-panel">
+      <h2>Due in Next 24 Hours</h2>
+      @if (reminderTasks.length === 0) {
+        <p class="empty">No reminders right now.</p>
+      } @else {
+        <ul>
+          @for (task of reminderTasks; track task.id) {
+            <li>
+              <span>{{ task.title }}</span>
+              <small>{{ task.dueDate }} · {{ ownerName(task.assigneeId) }}</small>
+            </li>
+          }
+        </ul>
+      }
+    </article>
+  </section>
+
+  <section class="panel task-panel">
+    <div class="task-header">
+      <h2>Task Board</h2>
+      <div class="filters">
+        <select [(ngModel)]="filters.ownerId" name="ownerIdFilter">
+          <option value="all">All Owners</option>
+          @for (user of users; track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+        <select [(ngModel)]="filters.status" name="statusFilter">
+          <option value="all">All Status</option>
+          <option value="To Do">To Do</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Done">Done</option>
+        </select>
+        <select [(ngModel)]="filters.priority" name="priorityFilter">
+          <option value="all">All Priority</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <select [(ngModel)]="filters.dueBucket" name="dueBucketFilter">
+          <option value="all">Any Due Date</option>
+          <option value="overdue">Overdue</option>
+          <option value="today">Today</option>
+          <option value="week">Next 7 Days</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="task-list">
+      @for (task of visibleTasks; track task.id) {
+        <article class="task-card" [class.overdue]="isOverdue(task) && task.status !== 'Done'">
+          <div class="task-meta">
+            <h3>{{ task.title }}</h3>
+            <p>{{ task.description || 'No description provided.' }}</p>
+            <small>Owner: {{ ownerName(task.ownerId) }} · Assignee: {{ ownerName(task.assigneeId) }}</small>
+          </div>
+          <div class="task-controls">
+            <div class="chips">
+              <span class="chip">{{ task.priority }}</span>
+              <span class="chip">{{ task.status }}</span>
+              <span class="chip">Due {{ task.dueDate }}</span>
+            </div>
+            <div class="control-row">
+              <label>
+                Assign
+                <select [ngModel]="task.assigneeId" (ngModelChange)="assignTask(task, $event)">
+                  @for (user of users; track user.id) {
+                    <option [value]="user.id">{{ user.name }}</option>
+                  }
+                </select>
+              </label>
+              <div class="status-buttons">
+                <button (click)="updateStatus(task, 'To Do')">To Do</button>
+                <button (click)="updateStatus(task, 'In Progress')">In Progress</button>
+                <button (click)="updateStatus(task, 'Done')">Done</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  @if (isLead) {
+    <section class="panel report-panel">
+      <h2>Team Productivity Report</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Assignee</th>
+            <th>Open</th>
+            <th>Completed</th>
+            <th>Overdue</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of teamReport; track entry.assignee) {
+            <tr>
+              <td>{{ entry.assignee }}</td>
+              <td>{{ entry.open }}</td>
+              <td>{{ entry.completed }}</td>
+              <td>{{ entry.overdue }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+</main>
